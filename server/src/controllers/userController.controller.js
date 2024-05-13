@@ -8,13 +8,14 @@ const jwt=require("jsonwebtoken");
 const crypto=require("crypto");
 const mongoose=require("mongoose");
 const bcrypt=require("bcrypt");
+const { Post } = require("../models/post.model.js");
 
 const signUpUser=asyncHandler(async(req,res)=>{
     
     const {name,email,username,password}=req.body;
 
     //checking if required fields are provided
-    if([name,email,username,password].some(field=>!field || field.trim()==="")){
+    if([email,username,password].some(field=>!field || field.trim()==="")){
         throw new ApiError(400,"All fields are required");
     }
 
@@ -81,6 +82,45 @@ const signUpUser=asyncHandler(async(req,res)=>{
 
 })
 
+
+//creating a post 
+
+const createPost=asyncHandler(async(req,res)=>{
+    const {title,description}=req.body;
+
+    if(!title || !description){
+        throw new ApiError(400,"title and description is needed");
+    }
+
+    if(!req.files || !req.files.thumbnail || !req.files.thumbnail[0] || !req.files.thumbnail[0].path){
+        throw new ApiError(400,"thumbnail is required");
+    }
+
+
+    const thumbnailLocalPath=req.files.thumbnail[0].path;
+    const thumbnail=await uploadOnCloudinary(thumbnailLocalPath);
+
+    if(!thumbnail){
+        throw new ApiError(400,"thumbanil upload failed");
+    }
+
+    const post=await Post.create({
+        title,
+        description,
+        thumbnail:thumbnail.url
+    })
+
+
+    return res
+    .status(200)
+    .json(new ApiResponse(
+        200,post,"Post Created Successfully"
+    ))
+    
+})
+
+
 module.exports={
-    signUpUser
+    signUpUser,
+    createPost
 }
