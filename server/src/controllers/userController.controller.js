@@ -10,6 +10,7 @@ const mongoose=require("mongoose");
 const bcrypt=require("bcrypt");
 
 const signUpUser=asyncHandler(async(req,res)=>{
+    
     const {name,email,username,password}=req.body;
 
     //checking if required fields are provided
