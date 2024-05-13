@@ -9,6 +9,7 @@ const crypto=require("crypto");
 const mongoose=require("mongoose");
 const bcrypt=require("bcrypt");
 const { Post } = require("../models/post.model.js");
+const sendEmail = require("../utils/sendEmail.utils.js");
 
 const signUpUser=asyncHandler(async(req,res)=>{
     
@@ -66,7 +67,9 @@ const signUpUser=asyncHandler(async(req,res)=>{
 
     createdUser.accessToken=accessToken;
 
+    const messageToMail=`hello ${name?name:username} . You are welcomed on This Website `
 
+    await sendEmail(createdUser.email,"Welcome Message ",message);
     // Set cookie options
     const options = {
         httpOnly: true,
