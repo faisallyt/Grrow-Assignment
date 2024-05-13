@@ -119,8 +119,109 @@ const createPost=asyncHandler(async(req,res)=>{
     
 })
 
+const getAllPosts=asyncHandler(async(req,res)=>{
+    const posts=await Post.find();
+
+    if(!posts){
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,"There are no posts",
+            )
+        )
+    }
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,posts,"All posts retrieved",
+            )
+        )
+})
+
+const loginUser=asyncHandler(async(req,res)=>{
+    if(req.cookies?.accessToken || req.header.Authorization){
+        throw new ApiError(400,"User is already logged in");
+    }
+    const {email,username,password}=req.body;
+
+    if(!username && !email){
+        throw new ApiError(400,"username or email is required");
+    }
+
+    const user=await User.findOne({
+        $or:[{email},{username}]
+    });
+
+    if(!user){
+        throw new ApiError(404,"User does not exists");
+    }
+
+    
+    const isPasswordValid=await user.isPasswordCorrect(password);
+
+    if(!isPasswordValid){
+        throw new ApiError(401,"Invalid user credentials");
+    }
+
+    const {accessToken,refreshToken}=await generateAccessAndRefreshTokens(user._id);
+
+    const loggedInUser=await User.findById(user._id).select("-password -refreshToken");
+
+    
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user:loggedInUser,accessToken,
+                refreshToken
+            },
+            "User logged in Successfully"
+        )
+    )
+});
+
+const logoutUser=asyncHandler(async(req,res)=>{
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set:{
+                refreshToken:undefined
+            }
+        },
+        {
+            new:true
+        }
+    )
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+
+    return res.status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new ApiResponse(
+        200,
+        {},
+        "User logged Out"
+    ))
+});
 
 module.exports={
     signUpUser,
-    createPost
+    createPost,
+    getAllPosts,
+    loginUser,
+    logoutUser
 }
