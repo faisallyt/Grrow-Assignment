@@ -222,8 +222,11 @@ const logoutUser=asyncHandler(async(req,res)=>{
 });
 
 const refreshAccessToken=asyncHandler(async(req,res)=>{
-    const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken ;
 
+    if(req.cookies.accessToken || req.header.Authorization){
+        throw new ApiError(400,"User is already logged in")
+    }
     if(!incomingRefreshToken){
         throw new ApiError(401,"unauthorized request");
     }
@@ -262,6 +265,43 @@ const refreshAccessToken=asyncHandler(async(req,res)=>{
     catch(error){
         throw new ApiError(401,error?.message || "Invalid refresh Token");
     }
+});
+
+const resetPassword=asyncHandler(async(req,res)=>{
+    try{
+        const userId=req.user._id;
+        const {oldPassword,newPassword}=req.body;
+    
+        if(oldPassword===newPassword){
+            throw new ApiError(400,"New Password and Old password can not be same");
+        }
+
+        const user=await User.findById({_id:userId});
+    
+        if(!user){
+            throw new ApiError(404,"User doesn't exists");
+        }
+    
+        const isPasswordValid=await user.isPasswordCorrect(oldPassword);
+    
+        if(!isPasswordValid){
+            throw new ApiError(400,"Old password you entered is incorrect");
+        }
+        user.password=newPassword;
+        await user.save();
+    
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                "Password changed successfully"
+            )
+        )
+    }
+    catch(error){
+        throw new ApiError(500,error?.message || "Something went wrong while changing password");
+    }
 })
 
 module.exports={
@@ -270,5 +310,6 @@ module.exports={
     getAllPosts,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    resetPassword
 }
