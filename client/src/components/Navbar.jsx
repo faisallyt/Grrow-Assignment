@@ -13,7 +13,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUserData(null);
-    navigate("/home");
+    navigate("/");
   };
 
   useEffect(() => {
