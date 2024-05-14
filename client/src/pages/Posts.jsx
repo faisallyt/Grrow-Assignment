@@ -22,7 +22,7 @@ const Posts = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:9000/api/v1/user/posts?page=${page}`,
+          `https://grrow-assignment.onrender.com/api/v1/user/posts?page=${page}`,
           {
             headers: {
               Authorization: `Bearer ${refreshToken}`, // Send refresh token in Authorization header
