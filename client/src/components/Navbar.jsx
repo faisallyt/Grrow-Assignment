@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState(null);
-  const navigate = useNavigate();
+  const navigateTo = useNavigate();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -13,7 +13,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUserData(null);
-    navigate("/");
+    navigateTo("/");
   };
 
   useEffect(() => {
