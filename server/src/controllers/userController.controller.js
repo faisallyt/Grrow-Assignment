@@ -21,6 +21,8 @@ const signUpUser=asyncHandler(async(req,res)=>{
     }
 
     //check if student with same email or username already exists or not
+
+    // console.log("hello")
     const existedUser=await User.findOne({$or:[{username},{email}]});
 
     if(existedUser){
@@ -49,6 +51,7 @@ const signUpUser=asyncHandler(async(req,res)=>{
 
     //find created user
 
+    console.log(user);
     const createdUser=await User.findOne(user._id).select("-password -refreshToken");
 
     if(!createdUser){
@@ -61,15 +64,15 @@ const signUpUser=asyncHandler(async(req,res)=>{
 
     //Add AccessToken and RefreshToken to createdStudent
 
-    
     createdUser.refreshToken=refreshToken;
     await createdUser.save();
-
+    
+    console.log("hello now")
     createdUser.accessToken=accessToken;
-
+    
     const messageToMail=`hello ${name?name:username} . You are welcomed on This Website `
-
-    await sendEmail(createdUser.email,"Welcome Message ",message);
+    
+    // await sendEmail(createdUser.email,"Welcome Message ",message);
     // Set cookie options
     const options = {
         httpOnly: true,
@@ -122,26 +125,36 @@ const createPost=asyncHandler(async(req,res)=>{
     
 })
 
-const getAllPosts=asyncHandler(async(req,res)=>{
-    const posts=await Post.find();
+const getAllPosts = asyncHandler(async(req, res) => {
+    const page = parseInt(req.query.page) || 1; // Get the page number from the query parameter, default to 1
+    console.log(page)
+    const limit = 3; // Number of posts per page
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
 
-    if(!posts){
-        return res
-        .status(200)
-        .json(
+    const posts = await Post.find().skip(startIndex).limit(limit);
+
+    if (posts.length === 0) {
+        return res.status(200).json(
             new ApiResponse(
-                200,"There are no posts",
+                200,
+                { posts: [], page: page, totalPages: 0 }, // Return an empty array of posts and set totalPages to 0
+                "There are no posts",
             )
-        )
+        );
     }
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,posts,"All posts retrieved",
-            )
-        )
-})
+
+    // console.log(posts);
+    
+    const totalPosts = await Post.countDocuments(); // Count total number of posts in database
+    const totalPages = Math.ceil(totalPosts / limit); // Calculate total pages
+
+    return res.status(200).json(
+            { posts: posts}
+    );
+});
+
+
 
 const loginUser=asyncHandler(async(req,res)=>{
     if(req.cookies?.accessToken || req.header.Authorization){
