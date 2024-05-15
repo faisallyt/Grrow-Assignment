@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import Spinner from "../assets/spinner.gif";
+
 const UserRegister = () => {
   const navigateTo = useNavigate();
   const [formData, setFormData] = useState({
@@ -10,8 +12,9 @@ const UserRegister = () => {
     email: "",
     password: "",
     cpassword: "",
-    acceptTerms: "",
+    acceptTerms: false, // Initialize acceptTerms as false
   });
+  const [isSubmitting, setIsSubmitting] = useState(false); // State to track form submission
 
   const formDataSchema = z.object({
     username: z.string().min(3).max(25),
@@ -22,16 +25,19 @@ const UserRegister = () => {
 
   const handleFormData = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // Set isSubmitting to true when form is submitted
 
     try {
       const validatedData = formDataSchema.parse(formData);
       console.log(validatedData);
       if (!formData.acceptTerms) {
         alert("Please accept the terms and conditions.");
+        setIsSubmitting(false); // Set isSubmitting back to false
         return;
       }
       if (formData.password !== formData.cpassword) {
         alert("Passwords do not match.");
+        setIsSubmitting(false); // Set isSubmitting back to false
         return;
       }
 
@@ -68,6 +74,8 @@ const UserRegister = () => {
       } else {
         alert("Validation failed. Please check your input.");
       }
+    } finally {
+      setIsSubmitting(false); // Set isSubmitting back to false after form submission
     }
   };
 
@@ -242,7 +250,18 @@ const UserRegister = () => {
               <button
                 type="submit"
                 className="w-full text-white bg-blue-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                Create an account
+                {isSubmitting ? (
+                  <>
+                    <img
+                      src={Spinner}
+                      alt="Loading"
+                      className="inline-block w-5 h-5 mr-3"
+                    />
+                    Signing you up... Sorry it takes time
+                  </>
+                ) : (
+                  "Create an account"
+                )}
               </button>
             </form>
           </div>
