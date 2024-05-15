@@ -51,7 +51,6 @@ const signUpUser=asyncHandler(async(req,res)=>{
 
     //find created user
 
-    console.log(user);
     const createdUser=await User.findOne(user._id).select("-password -refreshToken");
 
     if(!createdUser){
@@ -67,7 +66,6 @@ const signUpUser=asyncHandler(async(req,res)=>{
     createdUser.refreshToken=refreshToken;
     await createdUser.save();
     
-    console.log("hello now")
     createdUser.accessToken=accessToken;
     
     const messageToMail=`hello ${name?name:username} . You are welcomed on This Website `
@@ -127,7 +125,6 @@ const createPost=asyncHandler(async(req,res)=>{
 
 const getAllPosts = asyncHandler(async(req, res) => {
     const page = parseInt(req.query.page) || 1; // Get the page number from the query parameter, default to 1
-    console.log(page)
     const limit = 3; // Number of posts per page
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
